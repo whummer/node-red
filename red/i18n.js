@@ -119,7 +119,6 @@ function getCatalog(namespace,lang) {
 
 function determineLangFromHeaders(acceptedLanguages){
     var lang = "en-US";
-    console.log(acceptedLanguages);
     acceptedLanguages = acceptedLanguages || [];
     for (var i=0;i<acceptedLanguages.length;i++){
         if (supportedLangs.indexOf(acceptedLanguages[i]) !== -1){
