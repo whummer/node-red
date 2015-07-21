@@ -189,7 +189,7 @@ Node.prototype.receive = function(msg) {
         msg._msgid = redUtil.generateId();
     }
     this.metric("receive",msg);
-    try { 
+    try {
         this.emit("input", msg);
     } catch(err) {
         this.error(err,msg);
@@ -247,5 +247,9 @@ Node.prototype.metric = function(eventname, msg, metricValue) {
  */
 Node.prototype.status = function(status) {
     comms.publish("status/" + this.id, status, true);
+    if (status) {
+        //status.i18n = this._(status.text);  //TODO
+        flows.handleStatus(this,status);
+    }
 };
 module.exports = Node;
