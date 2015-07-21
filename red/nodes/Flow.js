@@ -210,7 +210,7 @@ function diffNodeConfigs(oldNode,newNode) {
     return false;
 }
 
-function createCatchNodeMap(nodes) {
+function createCatchNodeMap(nodes,thing) {
     var catchNodes = {};
     var subflowInstances = {};
     var id;
@@ -220,7 +220,7 @@ function createCatchNodeMap(nodes) {
     */
     for (id in nodes) {
         if (nodes.hasOwnProperty(id)) {
-            if (nodes[id].type === "catch") {
+            if (nodes[id].type === thing) {
                 catchNodes[nodes[id].z] = nodes[id];
             }
         }
@@ -409,7 +409,8 @@ Flow.prototype.start = function(configDiff) {
         }
     }
     
-    this.catchNodeMap = createCatchNodeMap(this.activeNodes);
+    this.catchNodeMap = createCatchNodeMap(this.activeNodes,"catch");
+    this.statusNodeMap = createCatchNodeMap(this.activeNodes,"status");
     
     credentials.clean(this.config);
     events.emit("nodes-started");
@@ -786,5 +787,28 @@ Flow.prototype.handleError = function(node,logMessage,msg) {
     }
 }
 
+Flow.prototype.handleStatus = function(node,statusMessage) {
+    var statMessage = {
+        status : {
+            message: statusMessage,
+            //shape : statusMessage.shape,
+            //fill : statusMessage.fill,
+            source: {
+                id: node.id,
+                type: node.type,
+                name: node.name
+            }
+        }
+    };
+    if (this.hasOwnProperty("statusNodeMap")) {
+        if (this.statusNodeMap[node.z]) {
+            this.statusNodeMap[node.z].receive(statMessage);
+        } else {
+            if (this.activeNodes[node.z] && this.statusNodeMap[this.activeNodes[node.z].z]) {
+                this.statusNodeMap[this.activeNodes[node.z].z].receive(statMessage);
+            }
+        }
+    }
+}
 
 module.exports = Flow;

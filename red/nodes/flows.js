@@ -21,7 +21,6 @@ var typeRegistry = require("./registry");
 var credentials = require("./credentials");
 var Flow = require("./Flow");
 var log = require("../log");
-
 var events = require("../events");
 var redUtil = require("../util");
 var storage = null;
@@ -190,6 +189,9 @@ var flowNodes = module.exports = {
     },
     handleError: function(node,logMessage,msg) {
         activeFlow.handleError(node,logMessage,msg);
+    },
+    handleStatus: function(node,statusMessage) {
+        activeFlow.handleStatus(node,statusMessage);
     }
 };
 
