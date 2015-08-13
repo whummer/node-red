@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
- 
+
 RED.i18n = (function() {
-    
+
     return {
         init: function(done) {
             i18n.init({
@@ -40,6 +40,3 @@ RED.i18n = (function() {
         }
     }
 })();
-
-
-
