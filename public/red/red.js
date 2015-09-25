@@ -13,18 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+var nodeRedPathPrefix = window.nodeRedPathPrefix || "/bower_components/node-red/public/"; // TODO whu
+var nodeRedServicePipes = window.nodeRedServicePipes || servicesConfig.pipes.url + "/"; // TODO whu
+var nodeRedServicePipeEls = window.nodeRedServicePipeEls || servicesConfig.pipeelements.url + "/"; // TODO whu
+
 var RED = (function() {
 
+    var result = {};
 
-    function loadNodeList() {
-        $.ajax({
+    result.loadNodeList = function() {
+        return $.ajax({
             headers: {
                 "Accept":"application/json"
             },
             cache: false,
-            url: 'nodes',
+            url: nodeRedServicePipeEls + 'nodes',
             success: function(data) {
-		if(typeof data == "string") data = JSON.parse(data);
+                if(typeof data === "string") data = JSON.parse(data);
                 RED.nodes.setNodeList(data);
 
                 var nsCount = 0;
@@ -35,25 +41,25 @@ var RED = (function() {
                         RED.i18n.loadCatalog(ns.id, function() {
                             nsCount--;
                             if (nsCount === 0) {
-                                loadNodes();
+                                result.loadNodes();
                             }
                         });
                     }
                 }
                 if (nsCount === 0) {
-                    loadNodes();
+                    result.loadNodes();
                 }
             }
         });
     }
 
-    function loadNodes() {
-        $.ajax({
+    result.loadNodes = function() {
+        return $.ajax({
             headers: {
                 "Accept":"text/html"
             },
             cache: false,
-            url: 'nodes_html',
+            url: nodeRedServicePipeEls + 'nodes_html',
             success: function(data) {
                 $("body").append(data);
                 $("body").i18n();
@@ -62,20 +68,21 @@ var RED = (function() {
                 $(".palette-spinner").hide();
                 $(".palette-scroll").show();
                 $("#palette-search").show();
-                loadFlows();
+                result.loadFlows();
             }
         });
     }
 
-    function loadFlows() {
-        $.ajax({
+    result.loadFlows = function() {
+        return $.ajax({
             headers: {
                 "Accept":"application/json"
             },
             cache: false,
-            url: 'flows',
+            url: nodeRedServicePipes + 'flows' + "/" + window.nodeRedCurrentFlowID,
             success: function(nodes) {
-		if(typeof nodes == "string") nodes = JSON.parse(nodes);
+                if(typeof nodes === "string") nodes = JSON.parse(nodes);
+
                 RED.nodes.import(nodes);
                 RED.nodes.dirty(false);
                 RED.view.redraw(true);
@@ -212,10 +219,10 @@ var RED = (function() {
         $("#main-container").show();
         $(".header-toolbar").show();
 
-        loadNodeList();
+        result.loadNodeList();
     }
 
-    $(function() {
+    setTimeout(function() {
 
         if ((window.location.hostname !== "localhost") && (window.location.hostname !== "127.0.0.1")) {
             document.title = document.title+" : "+window.location.hostname;
@@ -224,13 +231,15 @@ var RED = (function() {
         ace.require("ace/ext/language_tools");
 
         RED.i18n.init(function() {
+            if(window.nodeRedBeforeLoadEditor) {
+                window.nodeRedBeforeLoadEditor();
+            }
             RED.settings.init(loadEditor);
         })
-    });
+    }, 0);
 
 
-    return {
-    };
+    return result;
 })();
 ;/**
  * Copyright 2015 IBM Corp.
@@ -301,7 +310,7 @@ RED.i18n = (function() {
     return {
         init: function(done) {
             i18n.init({
-                resGetPath: 'locales/__ns__',
+                resGetPath: nodeRedPathPrefix + 'locales/__ns__',
                 dynamicLoad: false,
                 load:'current',
                 ns: {
@@ -400,6 +409,8 @@ RED.settings = (function () {
             window.location.search = "";
         }
         
+        // whu: skip ajax setup (conflicts with other setups)
+        /*
         $.ajaxSetup({
             beforeSend: function(jqXHR,settings) {
                 // Only attach auth header for requests to relative paths
@@ -411,6 +422,7 @@ RED.settings = (function () {
                 }
             }
         });
+        */
 
         load(done);
     }
@@ -422,9 +434,10 @@ RED.settings = (function () {
             },
             dataType: "json",
             cache: false,
-            url: 'settings',
+            url: nodeRedPathPrefix + 'settings',
             success: function (data) {
-		if(typeof data == "string") data = JSON.parse(data);
+                if(typeof data === "string") data = JSON.parse(data);
+
                 setProperties(data);
                 if (RED.settings.user && RED.settings.user.anonymous) {
                     RED.settings.remove("auth-tokens");
@@ -2027,9 +2040,9 @@ RED.validators = {
 RED.deploy = (function() {
 
     var deploymentTypes = {
-        "full":{img:"red/images/deploy-full-o.png"},
-        "nodes":{img:"red/images/deploy-nodes-o.png"},
-        "flows":{img:"red/images/deploy-flows-o.png"}
+        "full":{img: nodeRedPathPrefix + "red/images/deploy-full-o.png"},
+        "nodes":{img: nodeRedPathPrefix + "red/images/deploy-nodes-o.png"},
+        "flows":{img: nodeRedPathPrefix + "red/images/deploy-flows-o.png"}
     }
 
     var ignoreDeployWarnings = {
@@ -2059,19 +2072,19 @@ RED.deploy = (function() {
 
         if (type == "default") {
             $('<li><span class="deploy-button-group button-group">'+
-              '<a id="btn-deploy" class="deploy-button disabled" href="#"><img id="btn-deploy-icon" src="red/images/deploy-full-o.png"> <span>'+RED._("deploy.deploy")+'</span></a>'+
+              '<a id="btn-deploy" class="deploy-button disabled" href="#"><img id="btn-deploy-icon" src="' + nodeRedPathPrefix + 'red/images/deploy-full-o.png"> <span>'+RED._("deploy.deploy")+'</span></a>'+
               '<a id="btn-deploy-options" data-toggle="dropdown" class="deploy-button" href="#"><i class="fa fa-caret-down"></i></a>'+
               '</span></li>').prependTo(".header-toolbar");
               RED.menu.init({id:"btn-deploy-options",
                   options: [
-                      {id:"deploymenu-item-full",toggle:"deploy-type",icon:"red/images/deploy-full.png",label:RED._("deploy.full"),sublabel:RED._("deploy.fullDesc"),selected: true, onselect:function(s) { if(s){changeDeploymentType("full")}}},
-                      {id:"deploymenu-item-flow",toggle:"deploy-type",icon:"red/images/deploy-flows.png",label:RED._("deploy.modifiedFlows"),sublabel:RED._("deploy.modifiedFlowsDesc"), onselect:function(s) {if(s){changeDeploymentType("flows")}}},
-                      {id:"deploymenu-item-node",toggle:"deploy-type",icon:"red/images/deploy-nodes.png",label:RED._("deploy.modifiedNodes"),sublabel:RED._("deploy.modifiedNodesDesc"),onselect:function(s) { if(s){changeDeploymentType("nodes")}}}
+                      {id:"deploymenu-item-full",toggle:"deploy-type",icon:nodeRedPathPrefix+"red/images/deploy-full.png",label:RED._("deploy.full"),sublabel:RED._("deploy.fullDesc"),selected: true, onselect:function(s) { if(s){changeDeploymentType("full")}}},
+                      {id:"deploymenu-item-flow",toggle:"deploy-type",icon:nodeRedPathPrefix+"red/images/deploy-flows.png",label:RED._("deploy.modifiedFlows"),sublabel:RED._("deploy.modifiedFlowsDesc"), onselect:function(s) {if(s){changeDeploymentType("flows")}}},
+                      {id:"deploymenu-item-node",toggle:"deploy-type",icon:nodeRedPathPrefix+"red/images/deploy-nodes.png",label:RED._("deploy.modifiedNodes"),sublabel:RED._("deploy.modifiedNodesDesc"),onselect:function(s) { if(s){changeDeploymentType("nodes")}}}
                   ]
               });
         } else if (type == "simple") {
             var label = options.label || RED._("deploy.deploy");
-            var icon = 'red/images/deploy-full-o.png';
+            var icon =  nodeRedPathPrefix + 'red/images/deploy-full-o.png';
             if (options.hasOwnProperty('icon')) {
                 icon = options.icon;
             }
@@ -2216,7 +2229,6 @@ RED.deploy = (function() {
             $("#btn-deploy-icon").addClass('spinner');
             RED.nodes.dirty(false);
 
-console.log(JSON.stringify(nns));
             $.ajax({
                 url:"flows",
                 type: "POST",
@@ -3217,7 +3229,7 @@ RED.view = (function() {
         .attr("pointer-events", "all")
         .style("cursor","crosshair")
         .on("mousedown", function() {
-            $(this).focus();
+            //$(this).focus(); // whu: don't focus (bad usability if chart not at (0,0)
         });
 
     var vis = outer
@@ -4457,7 +4469,7 @@ RED.view = (function() {
                             .attr("height",function(d){return Math.min(50,d.h-4);});
 
                         var icon = icon_group.append("image")
-                            .attr("xlink:href","icons/"+d._def.icon)
+                            .attr("xlink:href",nodeRedPathPrefix + "icons/"+d._def.icon)
                             .attr("class","node_icon")
                             .attr("x",0)
                             .attr("width","30")
@@ -4488,7 +4500,7 @@ RED.view = (function() {
                         //}
 
                         var img = new Image();
-                        img.src = "icons/"+d._def.icon;
+                        img.src = nodeRedPathPrefix + "icons/"+d._def.icon;
                         img.onload = function() {
                             icon.attr("width",Math.min(img.width,30));
                             icon.attr("height",Math.min(img.height,30));
@@ -4529,8 +4541,9 @@ RED.view = (function() {
                     //node.append("circle").attr({"class":"centerDot","cx":0,"cy":0,"r":5});
 
                     //node.append("path").attr("class","node_error").attr("d","M 3,-3 l 10,0 l -5,-8 z");
-                    node.append("image").attr("class","node_error hidden").attr("xlink:href","icons/node-error.png").attr("x",0).attr("y",-6).attr("width",10).attr("height",9);
-                    node.append("image").attr("class","node_changed hidden").attr("xlink:href","icons/node-changed.png").attr("x",12).attr("y",-6).attr("width",10).attr("height",10);
+                    node.append("image").attr("class","node_error hidden").attr("xlink:href",nodeRedPathPrefix + "icons/node-error.png").attr("x",0).attr("y",-6).attr("width",10).attr("height",9);
+                    node.append("image").attr("class","node_changed hidden").attr("xlink:href",nodeRedPathPrefix + "icons/node-changed.png").attr("x",12).attr("y",-6).attr("width",10).attr("height",10);
+                    node.append("image").attr("class","node_deployment hidden").attr("xlink:href",nodeRedPathPrefix + "icons/node-deploy-green.png").attr("x",24).attr("y",-6).attr("width",10).attr("height",10);
             });
 
             node.each(function(d,i) {
@@ -4630,10 +4643,10 @@ RED.view = (function() {
                                 } else {
                                     icon_url = d._def.icon;
                                 }
-                                if ("icons/"+icon_url != current_url) {
-                                    icon.attr("xlink:href","icons/"+icon_url);
+                                if ((nodeRedPathPrefix+"icons/"+icon_url) != current_url) {
+                                    icon.attr("xlink:href",nodeRedPathPrefix + "icons/"+icon_url);
                                     var img = new Image();
-                                    img.src = "icons/"+d._def.icon;
+                                    img.src = nodeRedPathPrefix + "icons/"+d._def.icon;
                                     img.onload = function() {
                                         icon.attr("width",Math.min(img.width,30));
                                         icon.attr("height",Math.min(img.height,30));
@@ -4648,6 +4661,15 @@ RED.view = (function() {
                             thisNode.selectAll(".node_changed")
                                 .attr("x",function(d){return d.w-10})
                                 .classed("hidden",function(d) { return !d.changed; });
+
+                            thisNode.selectAll(".node_deployment")
+                                .attr("x", function(d){return d.w-10})
+                                .attr("xlink:href", function(d){
+						return 	d.deployStatus == "deployed" ? (nodeRedPathPrefix + "icons/node-deploy-green.png") : 
+							d.deployStatus == "failed" ? (nodeRedPathPrefix + "icons/node-deploy-red.png") :
+							(nodeRedPathPrefix + "icons/node-deploy-gray.png"); }
+				)
+                                .classed("hidden", function(d) { return d.hideDeployStatus; });
 
                             thisNode.selectAll(".node_error")
                                 .attr("x",function(d){return d.w-10-(d.changed?13:0)})
@@ -4830,7 +4852,7 @@ RED.view = (function() {
     }
 
     function focusView() {
-        $("#chart svg").focus();
+        //$("#chart svg").focus(); // whu: don't focus (bad usability if chart not at (0,0)
     }
 
     /**
@@ -5206,15 +5228,23 @@ RED.palette = (function() {
     var categoryContainers = {};
 
     function createCategoryContainer(category, label){
+        
         label = label || category.replace("_", " ");
-        var catDiv = $('<div id="palette-container-'+category+'" class="palette-category palette-close hide">'+
-            '<div id="palette-header-'+category+'" class="palette-header"><i class="expanded fa fa-angle-down"></i><span>'+label+'</span></div>'+
-            '<div class="palette-content" id="palette-base-category-'+category+'">'+
-            '<div id="palette-'+category+'-input"></div>'+
-            '<div id="palette-'+category+'-output"></div>'+
-            '<div id="palette-'+category+'-function"></div>'+
-            '</div>'+
-            '</div>').appendTo("#palette-container");
+        var catDiv = null;
+
+        var elExist = $('#palette-container-' + category);
+        if(elExist.length > 0) {
+            catDiv = $(elExist[0]);
+        } else {
+            catDiv = $('<div id="palette-container-'+category+'" class="palette-category palette-close hide">'+
+                '<div id="palette-header-'+category+'" class="palette-header"><i class="expanded fa fa-angle-down"></i><span>'+label+'</span></div>'+
+                '<div class="palette-content" id="palette-base-category-'+category+'">'+
+                '<div id="palette-'+category+'-input"></div>'+
+                '<div id="palette-'+category+'-output"></div>'+
+                '<div id="palette-'+category+'-function"></div>'+
+                '</div>'+
+                '</div>').appendTo("#palette-container");
+        }
 
         categoryContainers[category] = {
             container: catDiv,
@@ -5338,7 +5368,7 @@ RED.palette = (function() {
             if (def.icon) {
                 var icon_url = (typeof def.icon === "function" ? def.icon.call({}) : def.icon);
                 var iconContainer = $('<div/>',{class:"palette_icon_container"+(def.align=="right"?" palette_icon_container_right":"")}).appendTo(d);
-                $('<div/>',{class:"palette_icon",style:"background-image: url(icons/"+icon_url+")"}).appendTo(iconContainer);
+                $('<div/>',{class:"palette_icon",style:"background-image: url(" + nodeRedPathPrefix + "icons/"+icon_url+")"}).appendTo(iconContainer);
             }
 
             d.style.backgroundColor = def.color;
@@ -7087,7 +7117,7 @@ RED.library = (function() {
 
 
     function loadFlowLibrary() {
-        $.getJSON("library/flows",function(data) {
+        $.getJSON(nodeRedPathPrefix + "library/flows",function(data) {
             //console.log(data);
 
             var buildMenu = function(data,root) {

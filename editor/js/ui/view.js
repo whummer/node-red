@@ -71,7 +71,7 @@ RED.view = (function() {
         .attr("pointer-events", "all")
         .style("cursor","crosshair")
         .on("mousedown", function() {
-            $(this).focus();
+            //$(this).focus(); // whu: don't focus (bad usability if chart not at (0,0)
         });
 
     var vis = outer
@@ -1311,7 +1311,7 @@ RED.view = (function() {
                             .attr("height",function(d){return Math.min(50,d.h-4);});
 
                         var icon = icon_group.append("image")
-                            .attr("xlink:href","icons/"+d._def.icon)
+                            .attr("xlink:href",nodeRedPathPrefix + "icons/"+d._def.icon)
                             .attr("class","node_icon")
                             .attr("x",0)
                             .attr("width","30")
@@ -1342,7 +1342,7 @@ RED.view = (function() {
                         //}
 
                         var img = new Image();
-                        img.src = "icons/"+d._def.icon;
+                        img.src = nodeRedPathPrefix + "icons/"+d._def.icon;
                         img.onload = function() {
                             icon.attr("width",Math.min(img.width,30));
                             icon.attr("height",Math.min(img.height,30));
@@ -1383,8 +1383,9 @@ RED.view = (function() {
                     //node.append("circle").attr({"class":"centerDot","cx":0,"cy":0,"r":5});
 
                     //node.append("path").attr("class","node_error").attr("d","M 3,-3 l 10,0 l -5,-8 z");
-                    node.append("image").attr("class","node_error hidden").attr("xlink:href","icons/node-error.png").attr("x",0).attr("y",-6).attr("width",10).attr("height",9);
-                    node.append("image").attr("class","node_changed hidden").attr("xlink:href","icons/node-changed.png").attr("x",12).attr("y",-6).attr("width",10).attr("height",10);
+                    node.append("image").attr("class","node_error hidden").attr("xlink:href",nodeRedPathPrefix + "icons/node-error.png").attr("x",0).attr("y",-6).attr("width",10).attr("height",9);
+                    node.append("image").attr("class","node_changed hidden").attr("xlink:href",nodeRedPathPrefix + "icons/node-changed.png").attr("x",12).attr("y",-6).attr("width",10).attr("height",10);
+                    node.append("image").attr("class","node_deployment hidden").attr("xlink:href",nodeRedPathPrefix + "icons/node-deploy-green.png").attr("x",24).attr("y",-6).attr("width",10).attr("height",10);
             });
 
             node.each(function(d,i) {
@@ -1484,10 +1485,10 @@ RED.view = (function() {
                                 } else {
                                     icon_url = d._def.icon;
                                 }
-                                if ("icons/"+icon_url != current_url) {
-                                    icon.attr("xlink:href","icons/"+icon_url);
+                                if ((nodeRedPathPrefix+"icons/"+icon_url) != current_url) {
+                                    icon.attr("xlink:href",nodeRedPathPrefix + "icons/"+icon_url);
                                     var img = new Image();
-                                    img.src = "icons/"+d._def.icon;
+                                    img.src = nodeRedPathPrefix + "icons/"+d._def.icon;
                                     img.onload = function() {
                                         icon.attr("width",Math.min(img.width,30));
                                         icon.attr("height",Math.min(img.height,30));
@@ -1502,6 +1503,15 @@ RED.view = (function() {
                             thisNode.selectAll(".node_changed")
                                 .attr("x",function(d){return d.w-10})
                                 .classed("hidden",function(d) { return !d.changed; });
+
+                            thisNode.selectAll(".node_deployment")
+                                .attr("x", function(d){return d.w-10})
+                                .attr("xlink:href", function(d){
+						return 	d.deployStatus == "deployed" ? (nodeRedPathPrefix + "icons/node-deploy-green.png") : 
+							d.deployStatus == "failed" ? (nodeRedPathPrefix + "icons/node-deploy-red.png") :
+							(nodeRedPathPrefix + "icons/node-deploy-gray.png"); }
+				)
+                                .classed("hidden", function(d) { return d.hideDeployStatus; });
 
                             thisNode.selectAll(".node_error")
                                 .attr("x",function(d){return d.w-10-(d.changed?13:0)})
@@ -1684,7 +1694,7 @@ RED.view = (function() {
     }
 
     function focusView() {
-        $("#chart svg").focus();
+        //$("#chart svg").focus(); // whu: don't focus (bad usability if chart not at (0,0)
     }
 
     /**

@@ -19,7 +19,7 @@ RED.i18n = (function() {
     return {
         init: function(done) {
             i18n.init({
-                resGetPath: 'locales/__ns__',
+                resGetPath: nodeRedPathPrefix + 'locales/__ns__',
                 dynamicLoad: false,
                 load:'current',
                 ns: {

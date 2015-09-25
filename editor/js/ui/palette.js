@@ -22,15 +22,23 @@ RED.palette = (function() {
     var categoryContainers = {};
 
     function createCategoryContainer(category, label){
+        
         label = label || category.replace("_", " ");
-        var catDiv = $('<div id="palette-container-'+category+'" class="palette-category palette-close hide">'+
-            '<div id="palette-header-'+category+'" class="palette-header"><i class="expanded fa fa-angle-down"></i><span>'+label+'</span></div>'+
-            '<div class="palette-content" id="palette-base-category-'+category+'">'+
-            '<div id="palette-'+category+'-input"></div>'+
-            '<div id="palette-'+category+'-output"></div>'+
-            '<div id="palette-'+category+'-function"></div>'+
-            '</div>'+
-            '</div>').appendTo("#palette-container");
+        var catDiv = null;
+
+        var elExist = $('#palette-container-' + category);
+        if(elExist.length > 0) {
+            catDiv = $(elExist[0]);
+        } else {
+            catDiv = $('<div id="palette-container-'+category+'" class="palette-category palette-close hide">'+
+                '<div id="palette-header-'+category+'" class="palette-header"><i class="expanded fa fa-angle-down"></i><span>'+label+'</span></div>'+
+                '<div class="palette-content" id="palette-base-category-'+category+'">'+
+                '<div id="palette-'+category+'-input"></div>'+
+                '<div id="palette-'+category+'-output"></div>'+
+                '<div id="palette-'+category+'-function"></div>'+
+                '</div>'+
+                '</div>').appendTo("#palette-container");
+        }
 
         categoryContainers[category] = {
             container: catDiv,
@@ -154,7 +162,7 @@ RED.palette = (function() {
             if (def.icon) {
                 var icon_url = (typeof def.icon === "function" ? def.icon.call({}) : def.icon);
                 var iconContainer = $('<div/>',{class:"palette_icon_container"+(def.align=="right"?" palette_icon_container_right":"")}).appendTo(d);
-                $('<div/>',{class:"palette_icon",style:"background-image: url(icons/"+icon_url+")"}).appendTo(iconContainer);
+                $('<div/>',{class:"palette_icon",style:"background-image: url(" + nodeRedPathPrefix + "icons/"+icon_url+")"}).appendTo(iconContainer);
             }
 
             d.style.backgroundColor = def.color;

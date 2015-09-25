@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
+var nodeRedPathPrefix = window.nodeRedPathPrefix || "/bower_components/node-red/public/"; // TODO whu
+var nodeRedServicePipes = window.nodeRedServicePipes || servicesConfig.pipes.url + "/"; // TODO whu
+var nodeRedServicePipeEls = window.nodeRedServicePipeEls || servicesConfig.pipeelements.url + "/"; // TODO whu
+
 var RED = (function() {
 
+    var result = {};
 
-    function loadNodeList() {
-        $.ajax({
+    result.loadNodeList = function() {
+        return $.ajax({
             headers: {
                 "Accept":"application/json"
             },
             cache: false,
-            url: 'nodes',
+            url: nodeRedServicePipeEls + 'nodes',
             success: function(data) {
+                if(typeof data === "string") data = JSON.parse(data);
                 RED.nodes.setNodeList(data);
 
                 var nsCount = 0;
@@ -34,25 +41,25 @@ var RED = (function() {
                         RED.i18n.loadCatalog(ns.id, function() {
                             nsCount--;
                             if (nsCount === 0) {
-                                loadNodes();
+                                result.loadNodes();
                             }
                         });
                     }
                 }
                 if (nsCount === 0) {
-                    loadNodes();
+                    result.loadNodes();
                 }
             }
         });
     }
 
-    function loadNodes() {
-        $.ajax({
+    result.loadNodes = function() {
+        return $.ajax({
             headers: {
                 "Accept":"text/html"
             },
             cache: false,
-            url: 'nodes',
+            url: nodeRedServicePipeEls + 'nodes_html',
             success: function(data) {
                 $("body").append(data);
                 $("body").i18n();
@@ -61,19 +68,21 @@ var RED = (function() {
                 $(".palette-spinner").hide();
                 $(".palette-scroll").show();
                 $("#palette-search").show();
-                loadFlows();
+                result.loadFlows();
             }
         });
     }
 
-    function loadFlows() {
-        $.ajax({
+    result.loadFlows = function() {
+        return $.ajax({
             headers: {
                 "Accept":"application/json"
             },
             cache: false,
-            url: 'flows',
+            url: nodeRedServicePipes + 'flows' + "/" + window.nodeRedCurrentFlowID,
             success: function(nodes) {
+                if(typeof nodes === "string") nodes = JSON.parse(nodes);
+
                 RED.nodes.import(nodes);
                 RED.nodes.dirty(false);
                 RED.view.redraw(true);
@@ -205,15 +214,15 @@ var RED = (function() {
         RED.deploy.init(RED.settings.theme("deployButton",null));
 
         RED.keyboard.add(/* ? */ 191,{shift:true},function(){RED.keyboard.showHelp();d3.event.preventDefault();});
-        RED.comms.connect();
+        //RED.comms.connect();
 
         $("#main-container").show();
         $(".header-toolbar").show();
 
-        loadNodeList();
+        result.loadNodeList();
     }
 
-    $(function() {
+    setTimeout(function() {
 
         if ((window.location.hostname !== "localhost") && (window.location.hostname !== "127.0.0.1")) {
             document.title = document.title+" : "+window.location.hostname;
@@ -222,11 +231,13 @@ var RED = (function() {
         ace.require("ace/ext/language_tools");
 
         RED.i18n.init(function() {
+            if(window.nodeRedBeforeLoadEditor) {
+                window.nodeRedBeforeLoadEditor();
+            }
             RED.settings.init(loadEditor);
         })
-    });
+    }, 0);
 
 
-    return {
-    };
+    return result;
 })();

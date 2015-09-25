@@ -17,9 +17,9 @@
 RED.deploy = (function() {
 
     var deploymentTypes = {
-        "full":{img:"red/images/deploy-full-o.png"},
-        "nodes":{img:"red/images/deploy-nodes-o.png"},
-        "flows":{img:"red/images/deploy-flows-o.png"}
+        "full":{img: nodeRedPathPrefix + "red/images/deploy-full-o.png"},
+        "nodes":{img: nodeRedPathPrefix + "red/images/deploy-nodes-o.png"},
+        "flows":{img: nodeRedPathPrefix + "red/images/deploy-flows-o.png"}
     }
 
     var ignoreDeployWarnings = {
@@ -49,19 +49,19 @@ RED.deploy = (function() {
 
         if (type == "default") {
             $('<li><span class="deploy-button-group button-group">'+
-              '<a id="btn-deploy" class="deploy-button disabled" href="#"><img id="btn-deploy-icon" src="red/images/deploy-full-o.png"> <span>'+RED._("deploy.deploy")+'</span></a>'+
+              '<a id="btn-deploy" class="deploy-button disabled" href="#"><img id="btn-deploy-icon" src="' + nodeRedPathPrefix + 'red/images/deploy-full-o.png"> <span>'+RED._("deploy.deploy")+'</span></a>'+
               '<a id="btn-deploy-options" data-toggle="dropdown" class="deploy-button" href="#"><i class="fa fa-caret-down"></i></a>'+
               '</span></li>').prependTo(".header-toolbar");
               RED.menu.init({id:"btn-deploy-options",
                   options: [
-                      {id:"deploymenu-item-full",toggle:"deploy-type",icon:"red/images/deploy-full.png",label:RED._("deploy.full"),sublabel:RED._("deploy.fullDesc"),selected: true, onselect:function(s) { if(s){changeDeploymentType("full")}}},
-                      {id:"deploymenu-item-flow",toggle:"deploy-type",icon:"red/images/deploy-flows.png",label:RED._("deploy.modifiedFlows"),sublabel:RED._("deploy.modifiedFlowsDesc"), onselect:function(s) {if(s){changeDeploymentType("flows")}}},
-                      {id:"deploymenu-item-node",toggle:"deploy-type",icon:"red/images/deploy-nodes.png",label:RED._("deploy.modifiedNodes"),sublabel:RED._("deploy.modifiedNodesDesc"),onselect:function(s) { if(s){changeDeploymentType("nodes")}}}
+                      {id:"deploymenu-item-full",toggle:"deploy-type",icon:nodeRedPathPrefix+"red/images/deploy-full.png",label:RED._("deploy.full"),sublabel:RED._("deploy.fullDesc"),selected: true, onselect:function(s) { if(s){changeDeploymentType("full")}}},
+                      {id:"deploymenu-item-flow",toggle:"deploy-type",icon:nodeRedPathPrefix+"red/images/deploy-flows.png",label:RED._("deploy.modifiedFlows"),sublabel:RED._("deploy.modifiedFlowsDesc"), onselect:function(s) {if(s){changeDeploymentType("flows")}}},
+                      {id:"deploymenu-item-node",toggle:"deploy-type",icon:nodeRedPathPrefix+"red/images/deploy-nodes.png",label:RED._("deploy.modifiedNodes"),sublabel:RED._("deploy.modifiedNodesDesc"),onselect:function(s) { if(s){changeDeploymentType("nodes")}}}
                   ]
               });
         } else if (type == "simple") {
             var label = options.label || RED._("deploy.deploy");
-            var icon = 'red/images/deploy-full-o.png';
+            var icon =  nodeRedPathPrefix + 'red/images/deploy-full-o.png';
             if (options.hasOwnProperty('icon')) {
                 icon = options.icon;
             }

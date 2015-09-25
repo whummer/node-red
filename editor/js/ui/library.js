@@ -17,7 +17,7 @@ RED.library = (function() {
 
 
     function loadFlowLibrary() {
-        $.getJSON("library/flows",function(data) {
+        $.getJSON(nodeRedPathPrefix + "library/flows",function(data) {
             //console.log(data);
 
             var buildMenu = function(data,root) {

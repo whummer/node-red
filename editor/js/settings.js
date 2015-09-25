@@ -75,6 +75,8 @@ RED.settings = (function () {
             window.location.search = "";
         }
         
+        // whu: skip ajax setup (conflicts with other setups)
+        /*
         $.ajaxSetup({
             beforeSend: function(jqXHR,settings) {
                 // Only attach auth header for requests to relative paths
@@ -86,6 +88,7 @@ RED.settings = (function () {
                 }
             }
         });
+        */
 
         load(done);
     }
@@ -97,8 +100,10 @@ RED.settings = (function () {
             },
             dataType: "json",
             cache: false,
-            url: 'settings',
+            url: nodeRedPathPrefix + 'settings',
             success: function (data) {
+                if(typeof data === "string") data = JSON.parse(data);
+
                 setProperties(data);
                 if (RED.settings.user && RED.settings.user.anonymous) {
                     RED.settings.remove("auth-tokens");
